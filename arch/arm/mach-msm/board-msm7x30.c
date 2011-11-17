@@ -4076,41 +4076,6 @@ static struct platform_device android_pmem_audio_device = {
        .dev = { .platform_data = &android_pmem_audio_pdata },
 };
 
-<<<<<<< HEAD
-<<<<<<< HEAD
-static struct kgsl_platform_data kgsl_pdata = {
-#ifdef CONFIG_MSM_NPA_SYSTEM_BUS
-	/* NPA Flow IDs */
-	.high_axi_3d = MSM_AXI_FLOW_3D_GPU_HIGH,
-	.high_axi_2d = MSM_AXI_FLOW_2D_GPU_HIGH,
-#else
-	/* AXI rates in KHz */
-	.high_axi_3d = 192000,
-	.high_axi_2d = 192000,
-#endif
-	.max_grp2d_freq = 0,
-	.min_grp2d_freq = 0,
-	.set_grp2d_async = NULL, /* HW workaround, run Z180 SYNC @ 192 MHZ */
-	.max_grp3d_freq = 245760000,
-	.min_grp3d_freq = 192 * 1000*1000,
-	.set_grp3d_async = set_grp3d_async,
-	.imem_clk_name = "imem_clk",
-	.grp3d_clk_name = "grp_clk",
-	.grp3d_pclk_name = "grp_pclk",
-=======
-static struct kgsl_core_platform_data kgsl_core_pdata = {
-	.imem_clk_name = {
-		.clk = "imem_clk",
-		.pclk = NULL,
-	},
-
-	.pt_va_base = 0x66000000,
-#ifdef CONFIG_KGSL_PER_PROCESS_PAGE_TABLE
-	.pt_va_size = SZ_32M,
-#else
-	.pt_va_size = SZ_128M,
-#endif
-=======
 static struct resource kgsl_3d0_resources[] = {
 	{
 		.name  = KGSL_3D0_REG_MEMORY,
@@ -4124,7 +4089,6 @@ static struct resource kgsl_3d0_resources[] = {
 		.end = INT_GRP_3D,
 		.flags = IORESOURCE_IRQ,
 	},
->>>>>>> 2dacbf9... msm: kgsl: Separate KGSL into individual 2D and 3D devices
 };
 
 static struct kgsl_device_platform_data kgsl_3d0_pdata = {
@@ -4154,6 +4118,10 @@ static struct kgsl_device_platform_data kgsl_3d0_pdata = {
 			.clk = "grp_clk",
 			.pclk = "grp_pclk",
 		},
+	},
+	.imem_clk_name = {
+		.clk = "imem_clk",
+		.pclk = NULL,
 	},
 };
 
@@ -4200,11 +4168,6 @@ static struct kgsl_device_platform_data kgsl_2d0_pdata = {
 	},
 	.clk = {
 		.name = {
-<<<<<<< HEAD
->>>>>>> 2fddee1... msm: kgsl: platform_data restructure for 2D/3D devices
-#ifdef CONFIG_MSM_KGSL_2D
-=======
->>>>>>> 2dacbf9... msm: kgsl: Separate KGSL into individual 2D and 3D devices
 			.clk = "grp_2d_clk",
 			.pclk = "grp_2d_pclk",
 		},
