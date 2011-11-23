@@ -47,6 +47,7 @@ g_multi-objs			:= multi.o
 g_hid-objs			:= hid.o
 g_nokia-objs			:= nokia.o
 g_webcam-objs			:= webcam.o
+g_android-objs			:= android.o
 
 obj-$(CONFIG_USB_ZERO)		+= g_zero.o
 obj-$(CONFIG_USB_AUDIO)		+= g_audio.o
@@ -64,23 +65,4 @@ obj-$(CONFIG_USB_G_HID)		+= g_hid.o
 obj-$(CONFIG_USB_G_MULTI)	+= g_multi.o
 obj-$(CONFIG_USB_G_NOKIA)	+= g_nokia.o
 obj-$(CONFIG_USB_G_WEBCAM)	+= g_webcam.o
-#/*< updata QC2030 USB yanzhijun 20101105 begin */
-ifeq ($(CONFIG_USB_AUTO_INSTALL),y)
-obj-$(CONFIG_USB_ANDROID)	+= android_huawei.o
-else
-obj-$(CONFIG_USB_ANDROID)	+= android.o
-endif
-#/* updata QC2030 USB yanzhijun 20101105 end >*/
-obj-$(CONFIG_USB_QCOM_MAEMO)    += qcom_maemo.o
-obj-$(CONFIG_USB_ANDROID_ACM)	+= f_acm.o u_serial.o
-obj-$(CONFIG_USB_F_SERIAL)	+= f_serial.o u_serial.o
-obj-$(CONFIG_USB_ANDROID_ADB)	+= f_adb.o
-obj-$(CONFIG_USB_ANDROID_MASS_STORAGE)	+= f_mass_storage.o
-obj-$(CONFIG_USB_ANDROID_MTP)	+= f_mtp.o
-obj-$(CONFIG_USB_ANDROID_RNDIS)	+= f_rndis.o u_ether.o
-
-# MSM specific
-obj-$(CONFIG_USB_ANDROID_DIAG)	+= f_diag.o
-obj-$(CONFIG_USB_ANDROID_RMNET)	+= f_rmnet.o
-obj-$(CONFIG_USB_ANDROID_RMNET_SDIO)   += f_rmnet_sdio.o
-
+obj-$(CONFIG_USB_G_ANDROID)	+= g_android.o
