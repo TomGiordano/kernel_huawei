@@ -1654,10 +1654,11 @@ set_polling(struct device *dev, struct device_attribute *attr,
 #ifdef CONFIG_HUAWEI_WIFI_SDCC
 		if (host->pdev_id == SDCC_WIFI_SLOT) {
 /* < DTS2011041800861 xuke 20110418 begin */
-			printk("%s : no need to enable polling for slot %d (as host->pdev_id) \n", __FUNCTION__ , \
+/*			printk("%s : no need to enable polling for slot %d (as host->pdev_id) \n", __FUNCTION__ , \
 							host->pdev_id );
+*/
 /* DTS2011041800861 xuke 20110418 end > */
-			mmc->caps &= ~MMC_CAP_NEEDS_POLL;
+//			mmc->caps &= ~MMC_CAP_NEEDS_POLL;
 	        }
 #endif
 /* DTS2010111804286  hanshirong 20101118 end > */
