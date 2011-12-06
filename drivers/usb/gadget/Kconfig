@@ -844,9 +844,8 @@ config USB_G_PRINTER
 	  which includes sample code for accessing the device file.
 
 config USB_G_ANDROID
-	boolean "Android Gadget"
+	tristate "Android Gadget"
 	depends on SWITCH
-	default y
 	help
 	  The Android gadget driver supports multiple USB functions.
 	  The functions can be configured via a board file and may be
@@ -978,12 +977,5 @@ config RMNET_SMD_DATA_CHANNEL
 
 
 endchoice
-#/* <DTS2010060900262, liyuping 20100805 begin */
-config USB_AUTO_INSTALL
-	boolean "usb auto install"	
-	help
-	 none
-	default y
-#/* DTS2010060900262 liyuping 20100805 end > */
 
 endif # USB_GADGET

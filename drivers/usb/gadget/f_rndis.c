@@ -415,12 +415,9 @@ static void rndis_command_complete(struct usb_ep *ep, struct usb_request *req)
 	/* In some pc, the rndis command is come before rndis bind.
 		It will result to mobile reset for the cdev is NULL
 	 */
-#ifndef CONFIG_USB_AUTO_INSTALL
 	if (status < 0)
 		ERROR(cdev, "RNDIS command error %d, %d/%d\n",
 			status, req->actual, req->length);
-#endif
-	/*DTS2010121301427 renjun 20101213 end>*/
 //	spin_unlock(&dev->lock);
 }
 

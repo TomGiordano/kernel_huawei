@@ -46,20 +46,6 @@
 #include <linux/uaccess.h>
 #include <linux/wakelock.h>
 
-/*< updata QC2030 USB yanzhijun 20101105 begin */
-#ifdef CONFIG_USB_AUTO_INSTALL
-#include <linux/syscalls.h>
-#include <linux/debugfs.h>
-#include "usb_switch_huawei.h"
-#include "../../../arch/arm/mach-msm/proc_comm.h"
-
-usb_switch_stru usb_switch_para;
-void ms_delay_work_init(int add_flag);
-void android_delay_work_init(int add_flag);
-static u8 is_mmc_exist = false;
-#endif  /* CONFIG_USB_AUTO_INSTALL */
-/* updata QC2030 USB yanzhijun 20101105 end >*/
-
 static const char driver_name[] = "msm72k_udc";
 
 /* #define DEBUG */
@@ -156,13 +142,6 @@ static void usb_do_remote_wakeup(struct work_struct *w);
 #define USB_FLAG_CONFIGURED     0x0020
 
 
-/*< DTS2010080503130 hanfeng 20100820 begin*/
-#ifdef CONFIG_USB_AUTO_INSTALL
-#define USB_INTERRUPT_NORMAL          0x0000
-#define USB_INTERRUPT_ABNORMAL        0x0001
-#endif
-/*DTS2010080503130 hanfeng 20100820 end >*/
-
 #define USB_CHG_DET_DELAY	msecs_to_jiffies(1000)
 #define REMOTE_WAKEUP_DELAY	msecs_to_jiffies(1000)
 #define PHY_STATUS_CHECK_DELAY	(jiffies + msecs_to_jiffies(1000))
@@ -252,62 +231,6 @@ static int msm72k_set_halt(struct usb_ep *_ep, int value);
 static void flush_endpoint(struct msm_endpoint *ept);
 static void usb_reset(struct usb_info *ui);
 static int usb_ept_set_halt(struct usb_ep *_ep, int value);
-
-/*< updata QC2030 USB yanzhijun 20101105 begin */
-#ifdef CONFIG_USB_AUTO_INSTALL
-void initiate_switch_to_cdrom(unsigned long delay_t)
-{
-    USB_PR("lxy: %s\n", __func__);
-
-    /* when unplug the usb line, if the usb mode is wlan, 
-       switch to the before mode. 
-    */
-    /*< DTS2011082402558 zhangyancun 20110824 begin */
-    /* make sure to return the old mode */
-    if (android_get_product_id() == curr_usb_pid_ptr->wlan_pid
-        || PID_WLAN_ADB == android_get_product_id())
-    /* DTS2011082402558 zhangyancun 20110824 end >*/
-    {
-      usb_switch_composition(usb_para_info.usb_pid, delay_t);
-      return;
-    }
-    
-    /* add new pid config for google */
-    if((usb_para_info.usb_pid == curr_usb_pid_ptr->norm_pid) || 
-        (usb_para_info.usb_pid == curr_usb_pid_ptr->auth_pid) ||
-        (usb_para_info.usb_pid == curr_usb_pid_ptr->google_pid)
-        )
-    {
-        USB_PR("lxy: switch to cdrom blocked, usb_para_info.usb_pid=0x%x\n", usb_para_info.usb_pid);
-        /* prevent usb switching */
-        return;
-    }
-
-    if(GOOGLE_INDEX == usb_para_info.usb_pid_index)
-    {
-        USB_PR("lxy: switch to cdrom blocked, usb_para_info.usb_pid_index=%d\n", usb_para_info.usb_pid_index);
-        /* prevent usb switching */
-        return;
-    }
-
-    usb_switch_composition(curr_usb_pid_ptr->cdrom_pid, delay_t);
-    
-}
-
-void usb_get_state(unsigned *state_para, unsigned *usb_state_para)
-{
-	struct usb_info *ui = the_usb_info;
-    *state_para = ui->state;
-    *usb_state_para = (unsigned)ui->usb_state;
-}
-
-u8 get_mmc_exist(void)
-{
-	return is_mmc_exist;
-}
-#endif  /* CONFIG_USB_AUTO_INSTALL */
-/* updata QC2030 USB yanzhijun 20101105 end >*/
-
 
 static void msm_hsusb_set_speed(struct usb_info *ui)
 {
@@ -1302,11 +1225,6 @@ static void flush_endpoint(struct msm_endpoint *ept)
 }
 
 
-/*< DTS2010080503130 hanfeng 20100820 begin*/
-#ifdef CONFIG_USB_AUTO_INSTALL
-static int usb_redo_offline_flag = USB_INTERRUPT_NORMAL;
-#endif
-/*DTS2010080503130 hanfeng 20100820 end >*/
 
 static irqreturn_t usb_interrupt(int irq, void *data)
 {
@@ -1401,26 +1319,10 @@ static irqreturn_t usb_interrupt(int irq, void *data)
 
 		spin_lock_irqsave(&ui->lock, flags);
 		ui->usb_state = USB_STATE_SUSPENDED;
-		/*< DTS2010080503130 hanfeng 20100820 begin*/
-#ifdef CONFIG_USB_AUTO_INSTALL
-		if( ui->flags == USB_FLAG_VBUS_OFFLINE ){
-		    usb_redo_offline_flag = USB_INTERRUPT_ABNORMAL;
-		}
-		ui->flags = USB_FLAG_SUSPEND;
-#endif
-		/*DTS2010080503130 hanfeng 20100820 end >*/
 		spin_unlock_irqrestore(&ui->lock, flags);
 
 		ui->driver->suspend(&ui->gadget);
 		schedule_work(&ui->work);
-#ifdef CONFIG_USB_OTG
-		/* notify otg for
-		 * 1. kicking A_BIDL_ADIS timer in case of A-peripheral
-		 * 2. disabling pull-up and kicking B_ASE0_RST timer
-		 */
-		if (ui->gadget.b_hnp_enable || ui->gadget.is_a_peripheral)
-			otg_set_suspend(ui->xceiv, 1);
-#endif
 	}
 
 	if (n & STS_UI) {
@@ -1465,12 +1367,6 @@ static void usb_prepare(struct usb_info *ui)
 	INIT_DELAYED_WORK(&ui->rw_work, usb_do_remote_wakeup);
 	if (ui->pdata && ui->pdata->is_phy_status_timer_on)
 		INIT_WORK(&ui->phy_status_check, usb_phy_stuck_recover);
-/*< updata QC2030 USB yanzhijun 20101105 begin */
-#ifdef CONFIG_USB_AUTO_INSTALL
-	android_delay_work_init(1);
-	ms_delay_work_init(1);
-#endif  /* CONFIG_USB_AUTO_INSTALL */
-/* updata QC2030 USB yanzhijun 20101105 end >*/
 }
 
 static void usb_reset(struct usb_info *ui)
@@ -1677,10 +1573,6 @@ static void usb_do_work(struct work_struct *w)
 				switch_set_state(&ui->sdev, 0);
 
 				ui->state = USB_STATE_OFFLINE;
-/*<DTS2011020901627 hanfeng 20110216 */
-#ifdef CONFIG_USB_AUTO_INSTALL
-       initiate_switch_to_cdrom(0);
-#endif  /* CONFIG_USB_AUTO_INSTALL */
 /*  DTS2011020901627 hanfeng 20110216 end > */
 				usb_do_work_check_vbus(ui);
 				pm_runtime_put_noidle(&ui->pdev->dev);
@@ -1716,18 +1608,6 @@ static void usb_do_work(struct work_struct *w)
 					wake_unlock(&ui->wlock);
 
               /*< DTS2010080503130 hanfeng 20100820 begin*/
-#ifdef CONFIG_USB_AUTO_INSTALL
-              if( usb_redo_offline_flag == USB_INTERRUPT_ABNORMAL ){
-              spin_lock_irqsave(&ui->lock, iflags);
-              usb_redo_offline_flag = USB_INTERRUPT_NORMAL;
-
-              ui->flags = USB_FLAG_VBUS_OFFLINE;
-              ui->usb_state = USB_STATE_NOTATTACHED;
-              spin_unlock_irqrestore(&ui->lock, iflags);
-              
-              USB_PR("lxy USB_FLAG_SUSPEND: %s: ui->state=%d, flags=0x%x usb_state=%d \n", __func__, ui->state, (unsigned int)ui->flags, ui->usb_state);
-              }
-#endif 
               /* DTS2010080503130 hanfeng 20100820 end >*/   
 				/* TBD: Initiate LPM at usb bus suspend */
 				break;
@@ -2492,220 +2372,6 @@ static ssize_t show_usb_chg_type(struct device *dev,
 }
 
 /*< updata QC2030 USB yanzhijun 20101105 begin */
-#ifdef CONFIG_USB_AUTO_INSTALL
-static ssize_t msm_hsusb_store_fixusb(struct device *dev,
-					  struct device_attribute *attr,
-					  const char *buf, size_t size)
-{
-	unsigned long pid_index = 0;
-    unsigned nv_item = 4526;
-    int  rval = -1;
-    u16  pid;
-    
-    USB_PR("lxy: %s, buf=%s\n", __func__, buf);
-	if (!strict_strtoul(buf, 10, &pid_index))
-    {
-        rval = msm_proc_comm(PCOM_NV_WRITE, &nv_item, (unsigned*)&pid_index); 
-        if(0 == rval)
-        {
-            USB_PR("lxy: Fixusb write OK! nv(%d)=%d, rval=%d\n", nv_item, (int)pid_index, rval);
-        }
-        else
-        {
-            USB_PR("lxy: Fixusb write failed! nv(%d)=%d, rval=%d\n", nv_item, (int)pid_index, rval);
-        }
-
-        /* add new pid config for google */
-        if(pid_index == GOOGLE_INDEX)
-        {
-            set_usb_sn(usb_para_data.usb_para.usb_serial);
-        }
-        else if(pid_index == NORM_INDEX)
-        {
-            /* set sn if pid is norm_pid */
-            set_usb_sn(USB_SN_STRING);
-        }
-        else
-        {
-            set_usb_sn(NULL);
-        }
-
-        pid = pid_index_to_pid(pid_index);
-
-        /* update usb_para_info.usb_pid when the user set USB pid */
-        usb_para_info.usb_pid = pid;
-        usb_para_info.usb_pid_index = pid_index;
-        USB_PR("lxy: usb_para_info update: %d - 0x%x\n", 
-            usb_para_info.usb_pid_index, usb_para_info.usb_pid);
-
-		usb_switch_composition((unsigned short)pid, 0);
-        
-	}
-    else
-	{
-		USB_PR("lxy: %s: Fixusb conversion failed\n", __func__);
-	}
-
-	return size;
-}
-/*< DTS2011092801571 wuzhihui 20111014 begin */
-static ssize_t msm_hsusb_show_fixusb(struct device *dev,
-					 struct device_attribute *attr,
-					 char *buf)
-{
-	int i;
-	unsigned nv_item = 4526;
-
-	/* delete read nv operation to avoid udisk switch crash. */
-	i = scnprintf(buf, PAGE_SIZE, "Fixusb read nv(%d)=%d, rval=%d\n", nv_item, usb_para_info.usb_pid_index, 0);
-
-	return i;
-}
-/*< DTS2011092801571 wuzhihui 20111014 end */
-
-static ssize_t msm_hsusb_show_switchusb(struct device *dev,
-					 struct device_attribute *attr,
-					 char *buf)
-{
-	int i;
-
-    if(usb_switch_para.dest_pid == curr_usb_pid_ptr->udisk_pid)
-    {
-    	i = scnprintf(buf, PAGE_SIZE, "usb_switch_para.dest_pid is udisk\n");
-    }
-    else if(usb_switch_para.dest_pid == curr_usb_pid_ptr->norm_pid)
-    {
-    	i = scnprintf(buf, PAGE_SIZE, "usb_switch_para.dest_pid is norm\n");
-    }
-    else if(usb_switch_para.dest_pid == curr_usb_pid_ptr->cdrom_pid)
-    {
-    	i = scnprintf(buf, PAGE_SIZE, "usb_switch_para.dest_pid is cdrom\n");
-    }
-    /* new requirement: usb tethering */
-    else if(usb_switch_para.dest_pid == curr_usb_pid_ptr->wlan_pid)
-    {
-    	i = scnprintf(buf, PAGE_SIZE, "usb_switch_para.dest_pid is wlan\n");
-    }
-    else
-    {
-    	i = scnprintf(buf, PAGE_SIZE, "usb_switch_para.dest_pid is not set\n");
-    }
-
-	return i;
-}
-
-static ssize_t msm_hsusb_store_switchusb(struct device *dev,
-					  struct device_attribute *attr,
-					  const char *buf, size_t size)
-{
-    char *udisk = "udisk";
-    char *norm="norm";
-    char *cdrom="cdrom";
-    char *auth="auth";
-    char *wlanther="ther_unet";
-    char *wlanunther="unther_unet";
-    USB_PR("lxy: %s, size = %d, buf = %s\n", __func__, size, buf);
-
-    if(1 == usb_switch_para.inprogress)
-    {
-        USB_PR("lxy: %s, switch blocked, buf=%s\n", __func__, buf);
-        return size;
-    }
-
-	usb_switch_para.inprogress =1;
-    /* new requirement: usb tethering */
-    if(!memcmp(buf, wlanunther, strlen(wlanunther)))
-    {
-        usb_switch_composition((unsigned short)usb_para_info.usb_pid, 0);
-        return size;
-    }
-    else if(!memcmp(buf, wlanther, strlen(wlanther)))
-    {
-        usb_switch_composition((unsigned short)curr_usb_pid_ptr->wlan_pid, 0);
-        return size;
-    }
-
-    /* add new pid config for google */
-    if(GOOGLE_INDEX == usb_para_info.usb_pid_index)
-    {
-        USB_PR("lxy: switch blocked, usb_para_info.usb_pid_index=%d\n", usb_para_info.usb_pid_index);
-		usb_switch_para.inprogress = 0;
-        return size;
-    }
-
-    if(!memcmp(buf, udisk, strlen(udisk)))
-    {
-        usb_switch_para.dest_pid = curr_usb_pid_ptr->udisk_pid;
-/*<DTS2011031601341 renjun 20110319 begin*/
-        //set serial number to support multiple disk in normal mode
-        if(0 != usb_para_data.usb_para.usb_serial[0]) 
-            set_usb_sn(usb_para_data.usb_para.usb_serial);
-        else
-            set_usb_sn(USB_SN_STRING);		
-/* DTS2011031601341 renjun 20110319 end>*/        
-    }
-    else if(!memcmp(buf, norm, strlen(norm)))
-    {
-        usb_switch_para.dest_pid = curr_usb_pid_ptr->norm_pid;
-    }
-    else if(!memcmp(buf, cdrom, strlen(cdrom)))
-    {
-        usb_switch_para.dest_pid = curr_usb_pid_ptr->cdrom_pid;
-    }
-    else if(!memcmp(buf, auth, strlen(auth)))
-    {
-        usb_switch_para.dest_pid = curr_usb_pid_ptr->auth_pid;
-    }
-    else
-    {
-        USB_PR("lxy: invalid input parameter\n");
-		usb_switch_para.inprogress = 0;
-        return size;
-    }
-
-    /* support switch udisk interface from pc */
-    /* if the new pid is same as current pid, do nothing */
-    if (android_get_product_id() != usb_switch_para.dest_pid)
-    {
-      usb_switch_composition((unsigned short)usb_switch_para.dest_pid, 0);
-    }
-    else
-    {
-      USB_PR("lxy: switch block for already in pid state.\n");
-      usb_switch_para.inprogress = 0;
-    }
-    
-	return size;
-}
-
-
-static ssize_t msm_hsusb_show_sd_status(struct device *dev,
-					 struct device_attribute *attr,
-					 char *buf)
-{
-	int i;
-
-    i = scnprintf(buf, PAGE_SIZE, "is_mmc_exist = %d\n", is_mmc_exist);
-    
-	return i;
-}
-
-/* support switch udisk interface from pc */
-/* set the sd exist state by vold */
-static ssize_t msm_hsusb_store_sd_status(struct device *dev,
-            struct device_attribute *attr,
-            const char *buf, size_t size)
-{
-  if (1 != size){
-    return size;
-  }
-  
-  is_mmc_exist = *buf;
-  USB_PR("msm_hsusb_store_sd_status: is_mmc_exist=%d\n", is_mmc_exist);
-    
-  return size;
-}
-#endif  /* CONFIG_USB_AUTO_INSTALL */
 /* updata QC2030 USB yanzhijun 20101105 end >*/
 
 static DEVICE_ATTR(wakeup, S_IWUSR, 0, usb_remote_wakeup);
@@ -2720,14 +2386,6 @@ static DEVICE_ATTR(chg_current, S_IWUSR | S_IRUSR,
  * the meet the requirements of Android Gingerbread CTS tests
  */  
 /*< updata QC2030 USB yanzhijun 20101105 begin */
-#ifdef CONFIG_USB_AUTO_INSTALL
-static DEVICE_ATTR(fixusb, 0664, 
-        msm_hsusb_show_fixusb, msm_hsusb_store_fixusb);
-static DEVICE_ATTR(switchusb, 0664, 
-        msm_hsusb_show_switchusb, msm_hsusb_store_switchusb);
-static DEVICE_ATTR(sdstatus, 0664, 
-        msm_hsusb_show_sd_status, msm_hsusb_store_sd_status);
-#endif  /* CONFIG_USB_AUTO_INSTALL */
 /* updata QC2030 USB yanzhijun 20101105 end >*/
 /* DTS2011030202829 genghua 20110318 end >*/
 
@@ -2960,23 +2618,6 @@ int usb_gadget_register_driver(struct usb_gadget_driver *driver)
 	dev_dbg(&ui->pdev->dev, "registered gadget driver '%s'\n",
 			driver->driver.name);
 /*< updata QC2030 USB yanzhijun 20101105 begin */
-#ifdef CONFIG_USB_AUTO_INSTALL
-	retval = device_create_file(&ui->gadget.dev, &dev_attr_fixusb);
-	if (retval != 0)
-		dev_err(&ui->pdev->dev,
-			"failed to create sysfs entry(fixusb):"
-			"err:(%d)\n", retval);
-	retval = device_create_file(&ui->gadget.dev, &dev_attr_switchusb);
-	if (retval != 0)
-		dev_err(&ui->pdev->dev,
-			"failed to create sysfs entry(switchusb):"
-			"err:(%d)\n", retval);
-	retval = device_create_file(&ui->gadget.dev, &dev_attr_sdstatus);
-	if (retval != 0)
-		dev_err(&ui->pdev->dev,
-			"failed to create sysfs entry(sdstatus):"
-			"err:(%d)\n", retval);
-#endif  /* CONFIG_USB_AUTO_INSTALL */
 /* updata QC2030 USB yanzhijun 20101105 end >*/
 	usb_start(ui);
 
@@ -3012,11 +2653,6 @@ int usb_gadget_unregister_driver(struct usb_gadget_driver *driver)
 	device_remove_file(&dev->gadget.dev, &dev_attr_chg_type);
 	device_remove_file(&dev->gadget.dev, &dev_attr_chg_current);
 /*< updata QC2030 USB yanzhijun 20101105 begin */
-#ifdef CONFIG_USB_AUTO_INSTALL
-	device_remove_file(&dev->gadget.dev, &dev_attr_fixusb);
-	device_remove_file(&dev->gadget.dev, &dev_attr_switchusb);
-	device_remove_file(&dev->gadget.dev, &dev_attr_sdstatus);
-#endif  /* CONFIG_USB_AUTO_INSTALL */
 /* updata QC2030 USB yanzhijun 20101105 end >*/
 	driver->disconnect(&dev->gadget);
 	driver->unbind(&dev->gadget);

@@ -184,12 +184,12 @@ NORET_TYPE void complete_and_exit(struct completion *, long)
 	ATTRIB_NORET;
 
 /* Internal, do not use. */
-int __must_check _kstrtoul(const char *s, unsigned int base, unsigned long *res);
-int __must_check _kstrtol(const char *s, unsigned int base, long *res);
+int _kstrtoul(const char *s, unsigned int base, unsigned long *res);
+int _kstrtol(const char *s, unsigned int base, long *res);
 
-int __must_check kstrtoull(const char *s, unsigned int base, unsigned long long *res);
-int __must_check kstrtoll(const char *s, unsigned int base, long long *res);
-static inline int __must_check kstrtoul(const char *s, unsigned int base, unsigned long *res)
+int kstrtoull(const char *s, unsigned int base, unsigned long long *res);
+int kstrtoll(const char *s, unsigned int base, long long *res);
+static inline int kstrtoul(const char *s, unsigned int base, unsigned long *res)
 {
 	/*
 	 * We want to shortcut function call, but
@@ -202,7 +202,7 @@ static inline int __must_check kstrtoul(const char *s, unsigned int base, unsign
 		return _kstrtoul(s, base, res);
 }
 
-static inline int __must_check kstrtol(const char *s, unsigned int base, long *res)
+static inline int kstrtol(const char *s, unsigned int base, long *res)
 {
 	/*
 	 * We want to shortcut function call, but
@@ -215,61 +215,61 @@ static inline int __must_check kstrtol(const char *s, unsigned int base, long *r
 		return _kstrtol(s, base, res);
 }
 
-int __must_check kstrtouint(const char *s, unsigned int base, unsigned int *res);
-int __must_check kstrtoint(const char *s, unsigned int base, int *res);
+int kstrtouint(const char *s, unsigned int base, unsigned int *res);
+int kstrtoint(const char *s, unsigned int base, int *res);
 
-static inline int __must_check kstrtou64(const char *s, unsigned int base, u64 *res)
+static inline int kstrtou64(const char *s, unsigned int base, u64 *res)
 {
 	return kstrtoull(s, base, res);
 }
 
-static inline int __must_check kstrtos64(const char *s, unsigned int base, s64 *res)
+static inline int kstrtos64(const char *s, unsigned int base, s64 *res)
 {
 	return kstrtoll(s, base, res);
 }
 
-static inline int __must_check kstrtou32(const char *s, unsigned int base, u32 *res)
+static inline int kstrtou32(const char *s, unsigned int base, u32 *res)
 {
 	return kstrtouint(s, base, res);
 }
 
-static inline int __must_check kstrtos32(const char *s, unsigned int base, s32 *res)
+static inline int kstrtos32(const char *s, unsigned int base, s32 *res)
 {
 	return kstrtoint(s, base, res);
 }
 
-int __must_check kstrtou16(const char *s, unsigned int base, u16 *res);
-int __must_check kstrtos16(const char *s, unsigned int base, s16 *res);
-int __must_check kstrtou8(const char *s, unsigned int base, u8 *res);
-int __must_check kstrtos8(const char *s, unsigned int base, s8 *res);
+int kstrtou16(const char *s, unsigned int base, u16 *res);
+int kstrtos16(const char *s, unsigned int base, s16 *res);
+int kstrtou8(const char *s, unsigned int base, u8 *res);
+int kstrtos8(const char *s, unsigned int base, s8 *res);
 
-int __must_check kstrtoull_from_user(const char __user *s, size_t count, unsigned int base, unsigned long long *res);
-int __must_check kstrtoll_from_user(const char __user *s, size_t count, unsigned int base, long long *res);
-int __must_check kstrtoul_from_user(const char __user *s, size_t count, unsigned int base, unsigned long *res);
-int __must_check kstrtol_from_user(const char __user *s, size_t count, unsigned int base, long *res);
-int __must_check kstrtouint_from_user(const char __user *s, size_t count, unsigned int base, unsigned int *res);
-int __must_check kstrtoint_from_user(const char __user *s, size_t count, unsigned int base, int *res);
-int __must_check kstrtou16_from_user(const char __user *s, size_t count, unsigned int base, u16 *res);
-int __must_check kstrtos16_from_user(const char __user *s, size_t count, unsigned int base, s16 *res);
-int __must_check kstrtou8_from_user(const char __user *s, size_t count, unsigned int base, u8 *res);
-int __must_check kstrtos8_from_user(const char __user *s, size_t count, unsigned int base, s8 *res);
+int kstrtoull_from_user(const char __user *s, size_t count, unsigned int base, unsigned long long *res);
+int kstrtoll_from_user(const char __user *s, size_t count, unsigned int base, long long *res);
+int kstrtoul_from_user(const char __user *s, size_t count, unsigned int base, unsigned long *res);
+int kstrtol_from_user(const char __user *s, size_t count, unsigned int base, long *res);
+int kstrtouint_from_user(const char __user *s, size_t count, unsigned int base, unsigned int *res);
+int kstrtoint_from_user(const char __user *s, size_t count, unsigned int base, int *res);
+int kstrtou16_from_user(const char __user *s, size_t count, unsigned int base, u16 *res);
+int kstrtos16_from_user(const char __user *s, size_t count, unsigned int base, s16 *res);
+int kstrtou8_from_user(const char __user *s, size_t count, unsigned int base, u8 *res);
+int kstrtos8_from_user(const char __user *s, size_t count, unsigned int base, s8 *res);
 
-static inline int __must_check kstrtou64_from_user(const char __user *s, size_t count, unsigned int base, u64 *res)
+static inline int kstrtou64_from_user(const char __user *s, size_t count, unsigned int base, u64 *res)
 {
 	return kstrtoull_from_user(s, count, base, res);
 }
 
-static inline int __must_check kstrtos64_from_user(const char __user *s, size_t count, unsigned int base, s64 *res)
+static inline int kstrtos64_from_user(const char __user *s, size_t count, unsigned int base, s64 *res)
 {
 	return kstrtoll_from_user(s, count, base, res);
 }
 
-static inline int __must_check kstrtou32_from_user(const char __user *s, size_t count, unsigned int base, u32 *res)
+static inline int kstrtou32_from_user(const char __user *s, size_t count, unsigned int base, u32 *res)
 {
 	return kstrtouint_from_user(s, count, base, res);
 }
 
-static inline int __must_check kstrtos32_from_user(const char __user *s, size_t count, unsigned int base, s32 *res)
+static inline int kstrtos32_from_user(const char __user *s, size_t count, unsigned int base, s32 *res)
 {
 	return kstrtoint_from_user(s, count, base, res);
 }

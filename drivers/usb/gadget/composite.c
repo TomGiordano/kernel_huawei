@@ -839,11 +839,6 @@ static void composite_setup_complete(struct usb_ep *ep, struct usb_request *req)
 				req->status, req->actual, req->length);
 }
 
-/*<DTS2011031601341 renjun 20110319 begin*/
-extern int serial_str_id;
-extern int in_usb_mode_normal_udisk(void);
-/* DTS2011031601341 renjun 20110319 end>*/        
-
 /*
  * The setup() callback implements all the ep0 functionality that's
  * not handled lower down, in hardware or the hardware driver(like
@@ -886,12 +881,6 @@ composite_setup(struct usb_gadget *gadget, const struct usb_ctrlrequest *ctrl)
 				count_configs(cdev, USB_DT_DEVICE);
 			value = min(w_length, (u16) sizeof cdev->desc);
 			memcpy(req->buf, &cdev->desc, value);
-			/*<DTS2011031601341 renjun 20110319 begin*/
-			if(in_usb_mode_normal_udisk()&&serial_str_id>0) {
-				//sequence number is needed to support multiple volumes in pc
-				((struct usb_device_descriptor *)req->buf)->iSerialNumber = serial_str_id;
-			}	
-			/* DTS2011031601341 renjun 20110319 end>*/        
 			break;
 		case USB_DT_DEVICE_QUALIFIER:
 			if (!gadget_is_dualspeed(gadget))
@@ -1345,8 +1334,6 @@ void usb_composite_unregister(struct usb_composite_driver *driver)
 	if (composite != driver)
 		return;
 	usb_gadget_unregister_driver(&composite_driver);
-	class_destroy(driver->class);
-	driver->class = NULL;
 }
 
 /**

@@ -2,7 +2,6 @@
  * Gadget Driver for Android
  *
  * Copyright (C) 2008 Google, Inc.
- * Copyright (c) 2009-2010, Code Aurora Forum. All rights reserved.
  * Author: Mike Lockwood <lockwood@android.com>
  *
  * This software is licensed under the terms of the GNU General Public
@@ -27,8 +26,6 @@
 #include <linux/kernel.h>
 #include <linux/utsname.h>
 #include <linux/platform_device.h>
-#include <linux/pm_runtime.h>
-#include <linux/debugfs.h>
 
 #include <linux/usb/ch9.h>
 #include <linux/usb/composite.h>
@@ -117,7 +114,6 @@ static struct android_dev *_android_dev;
 static int android_bind_config(struct usb_configuration *c);
 static void android_unbind_config(struct usb_configuration *c);
 
-#define MAX_STR_LEN		16
 /* string IDs are assigned dynamically */
 #define STRING_MANUFACTURER_IDX		0
 #define STRING_PRODUCT_IDX		1
@@ -389,10 +385,6 @@ static int rndis_function_bind_config(struct android_usb_function *f,
 
 	if (rndis->wceis) {
 		/* "Wireless" RNDIS; auto-detected by Windows */
-		rndis_iad_descriptor.bFunctionClass =
-						USB_CLASS_WIRELESS_CONTROLLER;
-		rndis_iad_descriptor.bFunctionSubClass = 0x01;
-		rndis_iad_descriptor.bFunctionProtocol = 0x03;
 		rndis_control_intf.bInterfaceClass =
 						USB_CLASS_WIRELESS_CONTROLLER;
 		rndis_control_intf.bInterfaceSubClass =	 0x01;
@@ -978,11 +970,11 @@ static void android_unbind_config(struct usb_configuration *c)
 	android_unbind_enabled_functions(dev, c);
 }
 
-static int __devinit android_bind(struct usb_composite_dev *cdev)
+static int android_bind(struct usb_composite_dev *cdev)
 {
 	struct android_dev *dev = _android_dev;
 	struct usb_gadget	*gadget = cdev->gadget;
-	int			gcnum, id, product_id, ret;
+	int			gcnum, id, ret;
 
 	usb_gadget_disconnect(gadget);
 
@@ -1173,9 +1165,6 @@ module_init(init);
 
 static void __exit cleanup(void)
 {
-#ifdef CONFIG_DEBUG_FS
-	android_debugfs_cleanup();
-#endif
 	usb_composite_unregister(&android_usb_driver);
 	class_destroy(android_class);
 	kfree(_android_dev);

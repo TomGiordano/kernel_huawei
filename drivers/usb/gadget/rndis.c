@@ -170,7 +170,7 @@ static int gen_ndis_query_resp(int configNr, u32 OID, u8 *buf,
 	int i, count;
 	rndis_query_cmplt_type *resp;
 	struct net_device *net;
-	struct net_device_stats *stats;
+	const struct net_device_stats *stats;
 
 	if (!r) return -ENOMEM;
 	resp = (rndis_query_cmplt_type *)r->buf;
