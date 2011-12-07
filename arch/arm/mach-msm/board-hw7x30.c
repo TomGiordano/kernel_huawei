@@ -1360,7 +1360,7 @@ static int get_phone_version(struct tp_resolution_conversion *tp_resolution_type
     /*<DTS2011051601005 fengwei 20110516 begin*/
     if (machine_is_msm7x30_u8820()
 	  ||machine_is_msm7x30_u8800_51()
-	  ||machine_is_msm8255_u8800_pro())
+	  ||machine_is_msm8255_u8800_pro() ||machine_is_msm7x30_u8800())
     {
         tp_resolution_type->lcd_x = LCD_X_WVGA;
         tp_resolution_type->lcd_y = LCD_Y_WVGA;   
@@ -8933,7 +8933,7 @@ static void __init virtualkeys_init(void)
         		   "\n");
     }
     else if ( machine_is_msm7x30_u8800_51()
-		   ||machine_is_msm8255_u8800_pro())
+		   ||machine_is_msm8255_u8800_pro() || machine_is_msm7x30_u8800())
     {
         buf_vkey_size = sprintf(buf_virtualkey,
         			__stringify(EV_KEY) ":" __stringify(KEY_BACK)  ":67:850:130:80"
