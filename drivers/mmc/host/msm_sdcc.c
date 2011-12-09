@@ -1553,7 +1553,7 @@ msmsdcc_platform_sdiowakeup_irq(int irq, void *dev_id)
 {
 	struct msmsdcc_host	*host = dev_id;
 
-	pr_debug("%s: SDIO Wake up IRQ : %d\n", mmc_hostname(host->mmc), irq);
+	pr_info("%s: SDIO Wake up IRQ : %d\n", mmc_hostname(host->mmc), irq);
 	BUG_ON(irq != host->plat->sdiowakeup_irq);
 
 	spin_lock(&host->lock);
@@ -2389,7 +2389,7 @@ msmsdcc_runtime_suspend(struct device *dev)
 		 * simple become pm usage counter increment operations.
 		 */
 /* < DTS2011022102443 xuke 20110303 begin */
-#ifdef CONFIG_HUAWEI_KERNEL
+#ifndef CONFIG_HUAWEI_KERNEL
 		if(SDCC_WIFI_SLOT != host->pdev_id){
 #endif
 /* DTS2011022102443 xuke 20110303 end > */
@@ -2397,7 +2397,7 @@ msmsdcc_runtime_suspend(struct device *dev)
 		rc = mmc_suspend_host(mmc);
 		pm_runtime_put_noidle(dev);
 /* < DTS2011022102443 xuke 20110303 begin */
-#ifdef CONFIG_HUAWEI_KERNEL
+#ifndef CONFIG_HUAWEI_KERNEL
 		}
 #endif
 /* DTS2011022102443 xuke 20110303 end > */
@@ -2463,13 +2463,13 @@ msmsdcc_runtime_resume(struct device *dev)
 		spin_unlock_irqrestore(&host->lock, flags);
 
 /* < DTS2011022102443 xuke 20110303 begin */
-#ifdef CONFIG_HUAWEI_KERNEL
+#ifndef CONFIG_HUAWEI_KERNEL
 		if(SDCC_WIFI_SLOT != host->pdev_id){
 #endif
 /* DTS2011022102443 xuke 20110303 end > */
 		mmc_resume_host(mmc);
 /* < DTS2011022102443 xuke 20110303 begin */
-#ifdef CONFIG_HUAWEI_KERNEL
+#ifndef CONFIG_HUAWEI_KERNEL
 		}
 #endif
 /* DTS2011022102443 xuke 20110303 end > */
