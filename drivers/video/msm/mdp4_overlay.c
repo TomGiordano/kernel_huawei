@@ -1629,7 +1629,6 @@ static int mdp4_overlay_req2pipe(struct mdp_overlay *req, int mixer,
 		return ptype;
 	}
 
-	req_share = (req->flags & MDP_OV_PIPE_SHARE);
 	if (req->flags & MDP_OV_PIPE_SHARE)
 		ptype = OVERLAY_TYPE_VIDEO; /* VG pipe supports both RGB+YUV */
 
@@ -2230,6 +2229,29 @@ uint32 tile_mem_size(struct mdp4_overlay_pipe *pipe, struct tile_desc *tp)
 	row_num_w = (pipe->src_width + tile_w - 1) / tile_w;
 	row_num_h = (pipe->src_height + tile_h - 1) / tile_h;
 	return ((row_num_w * row_num_h * tile_w * tile_h) + 8191) & ~8191;
+}
+
+int mdp4_overlay_play_wait(struct fb_info *info, struct msmfb_overlay_data *req)
+{
+	struct msm_fb_data_type *mfd = (struct msm_fb_data_type *)info->par;
+	struct mdp4_overlay_pipe *pipe;
+
+	if (mfd == NULL)
+		return -ENODEV;
+
+	if (!mfd->panel_power_on) /* suspended */
+		return -EPERM;
+
+	pipe = mdp4_overlay_ndx2pipe(req->id);
+
+	if (mutex_lock_interruptible(&mfd->dma->ov_mutex))
+		return -EINTR;
+
+	//mdp4_overlay_dtv_wait_for_ov(mfd, pipe);
+
+	mutex_unlock(&mfd->dma->ov_mutex);
+
+	return 0;
 }
 
 int mdp4_overlay_play(struct fb_info *info, struct msmfb_overlay_data *req,
