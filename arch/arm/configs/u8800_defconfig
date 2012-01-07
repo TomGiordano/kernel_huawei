@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.35.7
-# Fri Jan  6 17:29:37 2012
+# Fri Jan  6 23:24:52 2012
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -1407,7 +1407,7 @@ CONFIG_DIAG_CHAR=y
 # SDIO support for DIAG
 #
 # CONFIG_DIAG_SDIO_PIPE is not set
-CONFIG_HUAWEI_FEATURE_PHUDIAG=y
+# CONFIG_HUAWEI_FEATURE_PHUDIAG is not set
 CONFIG_UNIX98_PTYS=y
 # CONFIG_DEVPTS_MULTIPLE_INSTANCES is not set
 # CONFIG_LEGACY_PTYS is not set
