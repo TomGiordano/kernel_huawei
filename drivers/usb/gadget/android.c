@@ -33,6 +33,12 @@
 
 #include "gadget_chips.h"
 
+
+#ifdef CONFIG_HUAWEI_KERNEL
+#include <asm-arm/huawei/smem_vendor_huawei.h>
+#include "../../../arch/arm/mach-msm/smd_private.h"
+#endif
+
 /*
  * Kbuild is not very cooperative with respect to linking separately
  * compiled library objects into one module.  So for now we won't use
@@ -970,6 +976,22 @@ static void android_unbind_config(struct usb_configuration *c)
 	android_unbind_enabled_functions(dev, c);
 }
 
+#ifdef CONFIG_HUAWEI_KERNEL
+static void android_get_huawei_serial(void)
+{
+	smem_huawei_vender usb_para_data;
+	smem_huawei_vender *usb_para_ptr = NULL;
+	
+	usb_para_ptr = (smem_huawei_vender*) smem_alloc(SMEM_ID_VENDOR0, sizeof(smem_huawei_vender));
+	memcpy(&usb_para_data, usb_para_ptr, sizeof(smem_huawei_vender));
+
+	pr_info("%s: Usb serial = %s", __func__, usb_para_ptr->usb_para.usb_serial);
+
+	if (0 != usb_para_data.usb_para.usb_serial[0])
+		strncpy(serial_string, usb_para_data.usb_para.usb_serial, sizeof(serial_string) - 1);
+}
+#endif
+
 static int android_bind(struct usb_composite_dev *cdev)
 {
 	struct android_dev *dev = _android_dev;
@@ -1001,6 +1023,9 @@ static int android_bind(struct usb_composite_dev *cdev)
 	strncpy(manufacturer_string, "Android", sizeof(manufacturer_string) - 1);
 	strncpy(product_string, "Android", sizeof(product_string) - 1);
 	strncpy(serial_string, "0123456789ABCDEF", sizeof(serial_string) - 1);
+#ifdef CONFIG_HUAWEI_KERNEL
+	android_get_huawei_serial();
+#endif
 
 	id = usb_string_id(cdev);
 	if (id < 0)
