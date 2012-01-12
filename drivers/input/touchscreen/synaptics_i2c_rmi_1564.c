@@ -496,14 +496,7 @@ pdt_next_iter:
 static void synaptics_rmi4_work_func(struct work_struct *work)
 {
 	int ret;
-/* < DTS2010070200975 zhangtao 20100702 begin */
-/* delete some lines*/
     __u8 finger_status = 0x00;
-    
-/*<DTS2011042602009 fengwei 20110426 begin*/
-
-/*we don't use the CONFIG_HUAWEI_TOUCHSCREEN_EXTRA_KEY so delete all the CONFIG_HUAWEI_TOUCHSCREEN_EXTRA_KEY code*/
-/*DTS2011042602009 fengwei 20110426 end>*/
     __u8 reg = 0;
     __u8 *finger_reg = NULL;
     u12 x = 0;
@@ -511,42 +504,33 @@ static void synaptics_rmi4_work_func(struct work_struct *work)
     u4 wx = 0;
     u4 wy = 0;
     u8 z = 0 ;
-/* DTS2010070200975 zhangtao 20100702 end > */
 
 	struct synaptics_rmi4 *ts = container_of(work,
 					struct synaptics_rmi4, work);
 
 	ret = i2c_transfer(ts->client->adapter, ts->data_i2c_msg, 2);
 
-	if (ret < 0) {
+	if (ret < 0)
 		printk(KERN_ERR "%s: i2c_transfer failed\n", __func__);
-	}
     else /* else with "i2c_transfer's return value"*/
 	{
 		__u8 *interrupt = &ts->data[ts->f01.data_offset + 1];
 		if (ts->hasF11 && interrupt[ts->f11.interrupt_offset] & ts->f11.interrupt_mask) 
         {
             __u8 *f11_data = &ts->data[ts->f11.data_offset];
-/* < DTS2010070200975 zhangtao 20100702 begin */
-
             int f = 0;
 			__u8 finger_status_reg = 0;
 			__u8 fsr_len = (ts->f11.points_supported + 3) / 4;
-			//int fastest_finger = -1;
-			int touch = 0;
+			
+			int hadTouch = 0;
+			
             TS_DEBUG_RMI("f11.points_supported is %d\n",ts->f11.points_supported);
             if(ts->is_support_multi_touch)
             {
-				/*< DTS2011090603675 fengwei 20110911 begin*/
-				/*delete some lines, not used*/
-				/* DTS2011090603675 fengwei 20110911 end >*/
-
                 for (f = 0; f < ts->f11.points_supported; ++f) 
                 {
-
-                	if (!(f % 4))
-                        
-                	finger_status_reg = f11_data[f / 4];
+					if (!(f % 4))
+						finger_status_reg = f11_data[f / 4];
 
                 	finger_status = (finger_status_reg >> ((f % 4) * 2)) & 3;
 
@@ -558,102 +542,40 @@ static void synaptics_rmi4_work_func(struct work_struct *work)
                 	wx = finger_reg[3] % 0x10;
                 	wy = finger_reg[3] / 0x10;
                 	z = finger_reg[4];
-                    /* < DTS2011060702165 cuiyu 20110607 begin */
-                    /* when the esd is get error we reset the touchscreen ic(only on u8820 now) */
-				    /* < DTS2011081604076 zhangtao 20110816 begin */
-
-                    if(machine_is_msm7x30_u8820())
-                    {
-					    /* don't read the interrupt again  */
-                        if(interrupt[ts->f11.interrupt_offset] & 0x02)
-                        {
-                            ret = i2c_smbus_read_byte_data(ts->client, fd_01.dataBase);
-                            if(ret & 0x03)
-                            {
-                                
-                                ret = i2c_smbus_write_byte_data(ts->client, fd_01.commandBase, 0x01);
-                                printk("the touchscreen is reset yet!\n");
-                            }
-                        }
-                    }
-                    /* DTS2011060702165 cuiyu 20110607 end > */
-					/* DTS2011081604076 zhangtao 20110816 end > */
-					/* < DTS2010091703205 zhangtao 20101007 begin */
-                    /*<DTS2011042602009 fengwei 20110426 begin*/
+                	
                     x = x * lcd_x / ts_x_max;
                     y = y * jisuan / ts_y_max;
-                    /*DTS2011042602009 fengwei 20110426 end>*/
-					/*< DTS2011090603675 fengwei 20110911 begin*/
-					/*check the scope of X  axes*/
+
                     x = check_scope_X(x);
-					/* DTS2011090603675 fengwei 20110911 end >*/
+                    
+                    printk(KERN_INFO "Finger status is: %d\n", finger_status);
+                    
+                    DBG_MASK("the x is %d the y is %d the status is %d!\n",x,y,finger_status);
+                    
+                    if (finger_status == 1)
+                    {
+						input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, f);
+						input_report_abs(ts->input_dev, ABS_MT_POSITION_X, x);
+						input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, y);
+						//input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, z);
+						input_report_abs(ts->input_dev, ABS_MT_TOUCH_MINOR, min(wx, wy));
+						input_report_abs(ts->input_dev, ABS_MT_ORIENTATION, (wx > wy ? 1 : 0));
+						input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, z);
+						input_report_abs(ts->input_dev, ABS_MT_PRESSURE, 255);
+						input_report_key(ts->input_dev, BTN_TOUCH, finger_status);
+						input_mt_sync(ts->input_dev);
+						DBG_MASK("the touch inout is ok!\n");
 
-                    DBG_MASK("the x is %d the y is %d the stauts is %d!\n",x,y,finger_status);
-					/* DTS2010091703205 zhangtao 20101007 end > */
-                	/* Linux 2.6.31 multi-touch */
-					/*<DTS2011062804735 maquanwei 20110705 begin*/
-					/* update Version G,tp report id event should begin with id0,or the angry birds can not play*/
-                	input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, f);
-					/* DTS2011062804735 maquanwei 20110705 end>*/
-                	input_report_abs(ts->input_dev, ABS_MT_POSITION_X, x);
-                	input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, y);
-                	input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, z);
-                	input_report_abs(ts->input_dev, ABS_MT_TOUCH_MINOR, min(wx, wy));
-                	input_report_abs(ts->input_dev, ABS_MT_ORIENTATION, (wx > wy ? 1 : 0));
-                    input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, z);
-					/* < DTS2010091703205 zhangtao 20101007 begin */
-                    input_mt_sync(ts->input_dev);  
-                    DBG_MASK("the touch inout is ok!\n");
-					/* DTS2010091703205 zhangtao 20101007 end > */
-                    /*<DTS2011042602009 fengwei 20110426 begin*/
-
-                    /*we don't use the CONFIG_HUAWEI_TOUCHSCREEN_EXTRA_KEY so delete all the CONFIG_HUAWEI_TOUCHSCREEN_EXTRA_KEY code*/
-                    /*DTS2011042602009 fengwei 20110426 end>*/
-                    ts->f11_fingers[f].status = finger_status;
-                    input_report_key(ts->input_dev, BTN_TOUCH, touch);
+						ts->f11_fingers[f].status = finger_status;
+						hadTouch = 1;
+					}
                 }
-            }
-            else /* else with "if(ts->is_support_multi_touch)"*/
-            {
-    			finger_status_reg = f11_data[0];
-                finger_status = (finger_status_reg & 3);
-                TS_DEBUG_RMI("the finger_status is %2d!\n",finger_status);
-          
-                reg = fsr_len;
-                finger_reg = &f11_data[reg];
-                x = (finger_reg[0] * 0x10) | (finger_reg[2] % 0x10);
-                y = (finger_reg[1] * 0x10) | (finger_reg[2] / 0x10);
-				wx = finger_reg[3] % 0x10;
-				wy = finger_reg[3] / 0x10;
-				z = finger_reg[4];
-                /*<DTS2011042602009 fengwei 20110426 begin*/
-
-                x = x * lcd_x / ts_x_max;
-                y = y * jisuan / ts_y_max;
-                /*DTS2011042602009 fengwei 20110426 end>*/
-				/*< DTS2011090603675 fengwei 20110911 begin*/
-				/*check the scope of X  axes*/
-                x = check_scope_X(x);
-				/* DTS2011090603675 fengwei 20110911 end >*/
-
-                TS_DEBUG_RMI(KERN_ERR "the x_sig is %2d ,the y_sig is %2d \n",x, y);
-
-                input_report_abs(ts->input_dev, ABS_X, x);
-				input_report_abs(ts->input_dev, ABS_Y, y);
-
-				input_report_abs(ts->input_dev, ABS_PRESSURE, z);
-				input_report_abs(ts->input_dev, ABS_TOOL_WIDTH, z);
-                input_report_key(ts->input_dev, BTN_TOUCH, finger_status);
-                input_sync(ts->input_dev);
-            
-                /*<DTS2011042602009 fengwei 20110426 begin*/
                 
-                /*we don't use the CONFIG_HUAWEI_TOUCHSCREEN_EXTRA_KEY so delete all the CONFIG_HUAWEI_TOUCHSCREEN_EXTRA_KEY code*/
-                /*DTS2011042602009 fengwei 20110426 end>*/
+                if (hadTouch == 0)
+                {
+					input_mt_sync(ts->input_dev);
+				}
             }
-
-
-/* DTS2010070200975 zhangtao 20100702 end > */
  
             /* f == ts->f11.points_supported */
 			/* set f to offset after all absolute data */
@@ -707,16 +629,14 @@ static void synaptics_rmi4_work_func(struct work_struct *work)
 			input_report_key(ts->input_dev, BTN_DEAD, touch);
 
 		}
-    		input_sync(ts->input_dev);
+		input_sync(ts->input_dev);
 	}
 /*<DTS2011042602009 fengwei 20110426 begin*/
 	/*< DTS2011090603675 fengwei 20110911 begin*/
 	/*delete one line*/
 	/* DTS2011090603675 fengwei 20110911 end >*/
 	if (ts->use_irq)
-	{
-       enable_irq(ts->client->irq);
-    }
+		enable_irq(ts->client->irq);
 /*DTS2011042602009 fengwei 20110426 end>*/
 /* < DTS2010070200975 zhangtao 20100702 begin */
 /* delete some lines which is not needed anymore*/
@@ -1245,7 +1165,7 @@ static int synaptics_rmi4_resume(struct i2c_client *client)
 	}
 	else
 		hrtimer_start(&ts->timer, ktime_set(1, 0), HRTIMER_MODE_REL);
-    printk(KERN_ERR "synaptics_rmi4_touch is resume!\n");
+    printk(KERN_ERR "synaptics_rmi4_touch resumes!\n");
 /* DTS2010062400225 zhangtao 20100624 end > */
 
 	return 0;
