@@ -69,6 +69,7 @@ static int camera_node;
 static enum msm_camera_type camera_type[MSM_MAX_CAMERA_SENSORS];
 static uint32_t sensor_mount_angle[MSM_MAX_CAMERA_SENSORS];
 
+#ifdef CONFIG_MSM_CAMERA_DEBUG
 static const char *vfe_config_cmd[] = {
 	"CMD_GENERAL",  /* 0 */
 	"CMD_AXI_CFG_OUT1",
@@ -114,6 +115,8 @@ static const char *vfe_config_cmd[] = {
 	"CMD_VPE",
 	"CMD_AXI_CFG_VPE"
 };
+#endif
+
 #define __CONTAINS(r, v, l, field) ({				\
 	typeof(r) __r = r;					\
 	typeof(v) __v = v;					\
