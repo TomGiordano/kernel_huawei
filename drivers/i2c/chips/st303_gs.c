@@ -64,7 +64,6 @@ static signed short st_sensor_data[3];
 /* < DTS2011042703449  liujinggang 20110427 begin */
 extern int st303_dev_id;
 
-extern struct input_dev *sensor_dev;
 /* DTS2011042703449  liujinggang 20110427 end > */
 
 enum st303_reg {
@@ -352,7 +351,6 @@ static void gs_work_func(struct work_struct *work)
 	signed short x = 0;
 	signed short y = 0;
 	signed short z = 0;
-	signed short tmp = 0;
 	u8 udata[2]={0};
 
 	
@@ -406,16 +404,13 @@ static void gs_work_func(struct work_struct *work)
 			z -= 4096; 		/*负数按照补码计算 */   
 		}
 
-		tmp = -x;
-		x = -y;
-		y = tmp;
 
 		memset((void*)st_sensor_data, 0, sizeof(st_sensor_data));
 	 	/* < DTS2011043000257  liujinggang 20110503 begin */
 		/*<BU5D09887 liujinggang 20100514 begin*/
 		/*<BU5D09396 liujinggang 20100506 begin*/
-		st_sensor_data[0]= -x;
-		st_sensor_data[1]= -y;	
+		st_sensor_data[0]= y;
+		st_sensor_data[1]= x;	
 		st_sensor_data[2]= z;
 		/*BU5D09396 liujinggang 20100506 end>*/
 		/*BU5D09887 liujinggang 20100514 end>*/
@@ -617,23 +612,15 @@ static int gs_probe(
 	}
 	
 
-	if (sensor_dev == NULL)
-	{
-		gs->input_dev = input_allocate_device();
-		if (gs->input_dev == NULL) {
-			ret = -ENOMEM;
-			printk(KERN_ERR "gs_probe: Failed to allocate input device\n");
-			goto err_input_dev_alloc_failed;
-		}
-		
-		gs->input_dev->name = "sensors";
-		sensor_dev = gs->input_dev;
-		
-	}else{
-	
-		gs->input_dev = sensor_dev;
+	gs->input_dev = input_allocate_device();
+	if (gs->input_dev == NULL) {
+		ret = -ENOMEM;
+		printk(KERN_ERR "gs_probe: Failed to allocate input device\n");
+		goto err_input_dev_alloc_failed;
 	}
-	
+		
+	gs->input_dev->name = "accel";
+
 	gs->input_dev->id.vendor = GS_ST303DLH;//for st303_compass detect.
 	set_bit(EV_ABS,gs->input_dev->evbit);
 	set_bit(ABS_X, gs->input_dev->absbit);

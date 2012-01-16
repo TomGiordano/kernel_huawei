@@ -98,7 +98,6 @@ static struct workqueue_struct *gs_wq;
 #endif
 
 static struct i2c_client *this_client;
-extern struct input_dev *sensor_dev;
 /*<BU5D08569 liujinggang 20100424 begin*/
 #ifdef DEBUG_WQ
 static int accel_delay = 1000; 
@@ -752,8 +751,8 @@ int st303_probe(struct i2c_client *client, const struct i2c_device_id * devid)
 	st303_init_client(client);
 	this_client = client;
 
-	st303->input_dev = sensor_dev;
-	if ((st303->input_dev == NULL)||(st303->input_dev->id.vendor != GS_ST303DLH)) {
+	st303->input_dev = input_allocate_device();
+	if (!st303->input_dev) {
 		err = -ENOMEM;
 		printk(KERN_ERR "st303_compass probe: Failed to allocate input device\n");
 		goto exit_input_dev_alloc_failed;
@@ -860,6 +859,12 @@ int st303_probe(struct i2c_client *client, const struct i2c_device_id * devid)
 	input_set_abs_params(st303->input_dev, ABS_HAT0Y, -2048, 2047, 0, 0);
 	/* z-axis of raw magnetic vector */
 	input_set_abs_params(st303->input_dev, ABS_BRAKE, -2048, 2047, 0, 0);
+
+	st303->input_dev->name = "compass";
+	
+	input_set_drvdata(st303->input_dev, st303);
+	err = input_register_device(st303->input_dev);
+
 	err = misc_register(&st303d_device);
 	if (err) {
 		printk(KERN_ERR "st303_probe: st303d_device register failed\n");
