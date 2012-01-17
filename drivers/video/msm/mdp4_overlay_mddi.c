@@ -540,7 +540,10 @@ void mdp4_mddi_overlay_kickoff(struct msm_fb_data_type *mfd,
 /* DTS2010080403325 lijianzhao 20100804 end >*/
     /*< DTS2011072603082 fengwei 20110806 begin*/
     /*for resolving freeze screen because of 60 frame freq and CTS TEST*/
-    if (mdp_hw_revision == MDP4_REVISION_V2_1) {
+	/* change mdp clk while mdp is idle` */
+	mdp4_set_perf_level();
+
+	if (mdp_hw_revision == MDP4_REVISION_V2_1) {
 		if (mdp4_overlay_status_read(MDP4_OVERLAY_TYPE_UNSET)) {
 			uint32  data;
 			data = inpdw(MDP_BASE + 0x0028);
@@ -649,6 +652,9 @@ void mdp4_mddi_dma_s_kickoff(struct msm_fb_data_type *mfd,
 	}
 #endif
 /* DTS2010080403325 lijianzhao 20100804 end >*/
+	/* change mdp clk while mdp is idle` */
+	mdp4_set_perf_level();
+
 	mdp_enable_irq(MDP_DMA_S_TERM);
 	mfd->dma->busy = TRUE;
 	mfd->ibuf_flushed = TRUE;
@@ -705,7 +711,6 @@ void mdp4_mddi_overlay(struct msm_fb_data_type *mfd)
 			complete(&mfd->pan_comp);
 		}
 	}
-	mdp4_overlay_resource_release();
 	mutex_unlock(&mfd->dma->ov_mutex);
     /*< DTS2011101103751 wangjiongfeng 20111011 begin */
     #ifdef CONFIG_HUAWEI_KERNEL

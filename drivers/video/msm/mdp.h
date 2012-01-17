@@ -61,6 +61,7 @@ extern ulong mdp4_display_intf;
 extern struct semaphore mdp_pipe_ctrl_mutex;
 #endif
 /* DTS2011081601583 pengyu 20110816 end >*/
+extern int mdp_rev;
 #define MDP4_REVISION_V1		0
 #define MDP4_REVISION_V2		1
 #define MDP4_REVISION_V2_1	2
@@ -134,14 +135,14 @@ typedef enum {
 } MDP_BLOCK_POWER_STATE;
 
 typedef enum {
-	MDP_MASTER_BLOCK,
 	MDP_CMD_BLOCK,
+	MDP_OVERLAY0_BLOCK,
+	MDP_MASTER_BLOCK,
 	MDP_PPP_BLOCK,
 	MDP_DMA2_BLOCK,
 	MDP_DMA3_BLOCK,
 	MDP_DMA_S_BLOCK,
 	MDP_DMA_E_BLOCK,
-	MDP_OVERLAY0_BLOCK,
 	MDP_OVERLAY1_BLOCK,
 	MDP_MAX_BLOCK
 } MDP_BLOCK_TYPE;
