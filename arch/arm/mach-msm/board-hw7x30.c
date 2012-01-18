@@ -235,7 +235,7 @@ struct vreg *vreg_gp4 = NULL;
 
 /*< DTS2011012004291 xuhui 20110120 begin */
 /*config res for  BCM4329 bt-wifi-fm in one */
-#ifdef CONFIG_HUAWEI_KERNEL
+#ifndef CONFIG_HUAWEI_KERNEL
 
 /*< DTS2011021001070 xuhui 20110210 begin */
 // 50 mSeconds for BCM4329 stable
@@ -3517,7 +3517,7 @@ static void msm_marimba_shutdown_power(void)
 };
 /* < DTS2011030705328 sihongfang 20110311 begin */
 /*bcm4329 do not use this function*/
-#ifndef CONFIG_HUAWEI_KERNEL
+#ifdef CONFIG_HUAWEI_KERNEL
 /* DTS2011030705328 sihongfang 20110311 end > */
 static int bahama_present(void)
 {
@@ -3977,7 +3977,7 @@ static struct marimba_platform_data marimba_pdata = {
 	.bahama_core_config = msm_bahama_core_config,
 /* < DTS2011030705328 sihongfang 20110311 begin */
 /*bcm4329 do not use this function*/
-#ifndef CONFIG_HUAWEI_KERNEL
+#ifdef CONFIG_HUAWEI_KERNEL
 	.fm = &marimba_fm_pdata,
 #endif
 /* DTS2011030705328 sihongfang 20110311 end > */
@@ -5442,7 +5442,7 @@ static struct lcdc_platform_data dtv_pdata = {
 
 /* < DTS2011041200623 xuhui 20110412 begin */
 /*disable QC's In Band Sleep mode with BCM4329 bluetooth chip*/
-#ifndef CONFIG_HUAWEI_KERNEL
+#ifdef CONFIG_HUAWEI_KERNEL
 static struct msm_serial_hs_platform_data msm_uart_dm1_pdata = {
        .inject_rx_on_wakeup = 1,
        .rx_to_inject = 0xFD,
@@ -5907,8 +5907,8 @@ static void __init msm_fb_add_devices(void)
 /* DTS2010072202961 hufeng 20100722 end> */
 
 /*< DTS2011012004291 xuhui 20110120 begin */
-//delete QC's bt code
-#ifndef CONFIG_HUAWEI_KERNEL
+//don't delete QC's bt code
+#ifdef CONFIG_HUAWEI_KERNEL
 #if defined(CONFIG_MARIMBA_CORE) && \
    (defined(CONFIG_MSM_BT_POWER) || defined(CONFIG_MSM_BT_POWER_MODULE))
 static struct platform_device msm_bt_power_device = {
@@ -6429,8 +6429,8 @@ static void __init bt_power_init(void)
 #endif
 
 #endif
-/*do all bt ops here:*/
-#ifdef CONFIG_HUAWEI_KERNEL
+/*don't do all bt ops here:*/
+#ifndef CONFIG_HUAWEI_KERNEL
 static struct platform_device msm_bt_power_device = {
     .name = "bt_power",
     .id     = -1
@@ -6940,7 +6940,7 @@ static struct platform_device *devices[] __initdata = {
 	&qup_device_i2c,
 
 /*< DTS2011012004291 xuhui 20110120 begin */
-#ifndef CONFIG_HUAWEI_KERNEL
+#ifdef CONFIG_HUAWEI_KERNEL
 #if defined(CONFIG_MARIMBA_CORE) && \
    (defined(CONFIG_MSM_BT_POWER) || defined(CONFIG_MSM_BT_POWER_MODULE))
 	&msm_bt_power_device,
@@ -9397,7 +9397,7 @@ static void __init msm7x30_init(void)
 #endif
 /* < DTS2011041200623 xuhui 20110412 begin */
 /*disable QC's In Band Sleep mode with BCM4329 bluetooth chip*/
-#ifndef CONFIG_HUAWEI_KERNEL
+#ifdef CONFIG_HUAWEI_KERNEL
 	msm_uart_dm1_pdata.wakeup_irq = gpio_to_irq(136);
 	msm_device_uart_dm1.dev.platform_data = &msm_uart_dm1_pdata;
 #endif
@@ -9493,7 +9493,7 @@ static void __init msm7x30_init(void)
 #endif
 /*  DTS2010092501047 luojianhong 201000926 end > */
 /*< DTS2011012004291 xuhui 20110120 begin */
-#ifdef CONFIG_HUAWEI_KERNEL
+#ifndef CONFIG_HUAWEI_KERNEL
         bt_bcm4329_power_init();
 #else
 	bt_power_init();
