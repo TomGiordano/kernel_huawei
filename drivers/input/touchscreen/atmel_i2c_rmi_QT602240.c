@@ -356,7 +356,14 @@ struct atmel_ts_data {
 #endif
 /*<BU5D09283 luojianhong 20100506 end*/
 
-       struct early_suspend early_suspend;
+	struct early_suspend early_suspend;
+};
+
+struct point_data {
+	int x, y;
+	int amplitude;
+	int width;
+	bool pressed;
 };
 
 #ifdef CONFIG_HAS_EARLYSUSPEND
@@ -2044,30 +2051,20 @@ static void atmel_ts_work_func(struct work_struct *work)
 	u8 component=0;
 	u8 keys;
 	static u32 key_pressed = 0;
-	static bool first_point_pressed = FALSE;
-	static bool second_point_pressed = FALSE;
-    static bool last_is_2points = FALSE;//if it's 2 points pressed last time.
-    static char first_point_id = 1; 
-    static int point_1_x;
-    static int point_1_y;
-    static int first_in_point = 0;
-    static int point_1_x_first_down;
-    static int point_1_y_first_down;
-    static int num_1;
-    static int num_2;
-    static int x_record1[10];
-    static int x_record2[5];
-    static int point_1_amplitude;
-    static int point_1_width;
-    static int point_2_x;
-    static int point_2_y;
-    static int point_2_amplitude;
-    static int point_2_width;
-    static u32 key_tmp_old;
-	#ifdef CONFIG_HUAWEI_TOUCHSCREEN_EXTRA_KEY
-		u32 key_tmp;
-		static u32 key_pressed1 = 0;
-	#endif
+	static bool last_is_2points = FALSE;//if it's 2 points pressed last time.
+	static int first_in_point = 0;
+	static int point_1_x_first_down;
+	static int point_1_y_first_down;
+	static int num_1;
+	static int num_2;
+	static int x_record1[10];
+	static int x_record2[5];
+	static struct point_data point[2];
+	static u32 key_tmp_old;
+#ifdef CONFIG_HUAWEI_TOUCHSCREEN_EXTRA_KEY
+	u32 key_tmp;
+	static u32 key_pressed1 = 0;
+#endif
 
 	u8 point_index = 1;
 	struct atmel_ts_data *ts = container_of(work, struct atmel_ts_data, work);
@@ -2078,26 +2075,25 @@ static void atmel_ts_work_func(struct work_struct *work)
 	{
 		case GEN_COMMANDPROCESSOR_T6:
 			status = *(touch_msg + 1);
-            /*if the calibration is done then make the pressed flag default*/
-            if(status & 0x10)
-            {
-                first_point_pressed = FALSE;
-	            second_point_pressed = FALSE;
-            }
+			/*if the calibration is done then make the pressed flag default*/
+			if(status & 0x10)
+			{
+				point[0].pressed = FALSE;
+				point[1].pressed = FALSE;
+			}
 			TS_DEBUG_TS("T6 status = 0x%02x\n", status);
 			break;
 			
 		case TOUCH_MULTITOUCHSCREEN_T9:
 			point_index = *touch_msg - T9_base_reportID + 1;
-          
-            
+
 			if (point_index > 2)
 			{
 				//only support 2 point now
 				TS_DEBUG_TS("too many point\n");
 				break;
 			}
-						
+
 			status = *(touch_msg + 1);
 			x_MSB = *(touch_msg + 2);
 			y_MSB = *(touch_msg + 3);
@@ -2105,16 +2101,16 @@ static void atmel_ts_work_func(struct work_struct *work)
 			ts->sizeoftouch = *(touch_msg + 5);
 			ts->touchamplitude = *(touch_msg + 6);
 			component = *(touch_msg + 7);
-            /* if the status is detected and the cal_check_flag is 1 then we should make the calibration */
-            if(0 != (status & 0x80)&&(cal_check_flag))
-            {
-                check_chip_calibration();
-            }
+			/* if the status is detected and the cal_check_flag is 1 then we should make the calibration */
+			if(0 != (status & 0x80)&&(cal_check_flag))
+			{
+				check_chip_calibration();
+			}
 
 			#ifdef TOUCH_12BIT
 				ts->touch_x = (x_MSB << 4) + ((xy_LSB >> 4) & 0x0f);
 				ts->touch_y = (y_MSB << 4) + (xy_LSB & 0x0f);
-			#else		
+			#else
 				ts->touch_x = (x_MSB << 2) + ((xy_LSB >> 6) & 0x03);
 				ts->touch_y = (y_MSB << 2) + ((xy_LSB >> 2) & 0x03);
 			#endif
@@ -2122,92 +2118,88 @@ static void atmel_ts_work_func(struct work_struct *work)
 			TS_DEBUG_TS("version 3;point %d released : %s,x=%04d,  y=%04d\n", 
 			point_index,((1 << 5) & status) ? "yes":"no", ts->touch_x, ts->touch_y);
 
-            ATMEL_DBG_MASK("version 3;point %d released : %s,x=%04d,  y=%04d\n", 
-		    point_index,((1 << 5) & status) ? "yes":"no", ts->touch_x, ts->touch_y);
+			ATMEL_DBG_MASK("version 3;point %d released : %s,x=%04d,  y=%04d\n", 
+			point_index,((1 << 5) & status) ? "yes":"no", ts->touch_x, ts->touch_y);
 
 			if(ts->is_support_multi_touch)
 			{
-                /*the 5-bit in STATUS register specifies the current point just released*/
+				/*the 5-bit in STATUS register specifies the current point just released*/
 				if((1 == point_index) && !((1 << 5) & status))
-					first_point_pressed = TRUE;
+				{
+					point[0].pressed = TRUE;
+				}
 				else if((1 == point_index) && ((1 << 5) & status))
-					first_point_pressed = FALSE;
+					point[0].pressed = FALSE;
 
 				if((2 == point_index) && !((1 << 5) & status))
-					second_point_pressed = TRUE;
+				{
+					point[1].pressed = TRUE;
+				}
 				else if((2 == point_index) && ((1 << 5) & status))
-					second_point_pressed = FALSE;
+					point[1].pressed = FALSE;
 				/*when two points are pressed, multi_touch mode is triggered.*/
 				/*if pressed, need to save the current coordinates*/
 				if(!((1 << 5) & status))
 				{
-					if(1 == point_index)
+					if(point_index == 1)
 					{
 						TS_DEBUG_TS("save point 1\t");
-						point_1_x = ts->touch_x;
-						point_1_y = ts->touch_y;
-						point_1_amplitude = ts->touchamplitude;
-						point_1_width = ts->sizeoftouch;
+						point[0].x = ts->touch_x;
+						point[0].y = ts->touch_y;
+						point[0].amplitude = ts->touchamplitude;
+						point[0].width = ts->sizeoftouch;
 						/* record point */
 						if((cal_check_flag != 0) && !(first_in_point))
 						{
 							first_in_point = 1;
 							num_1 = 0;
-							point_1_x_first_down = point_1_x;
-							point_1_y_first_down = point_1_y;
+							point_1_x_first_down = point[0].x;
+							point_1_y_first_down = point[0].y;
 						}
 						
 						/* timeout or not */
 						if(jiffies - resume_time < 6000)
 						{
-							x_record1[num_1] = point_1_x;
+							x_record1[num_1] = point[0].x;
 							if(num_1 >= 9)
 							{
 								/* check point */
 								if(check_too_many_point(num_1, x_record1) == -1)
-								{
 									cal_check_flag = 1;
-								}
 								num_1 = 0;
 							}
 							else
-							{
 								num_1++;
-							}
-						}					
+						}
 					}
 					else
 					{
 						TS_DEBUG_TS("save point 2\t");
-						point_2_x = ts->touch_x;
-						point_2_y = ts->touch_y;
-						point_2_amplitude = ts->touchamplitude;
-						point_2_width = ts->sizeoftouch;
+						point[1].x = ts->touch_x;
+						point[1].y = ts->touch_y;
+						point[1].amplitude = ts->touchamplitude;
+						point[1].width = ts->sizeoftouch;
 						/* timeout or not */
 						if(jiffies - resume_time < 6000)
 						{
-							x_record2[num_2] = point_2_x;
+							x_record2[num_2] = point[1].x;
 							if(num_2 >= 4)
 							{
 								/* check point */
 								if(check_too_many_point(num_2, x_record2) == -1)
-            					{
 									cal_check_flag = 1;
-								}
-            					num_2 = 0;
-            				}
-            				else
-            				{
-            					num_2++;
-            				}
-            			}
+								num_2 = 0;
+							}
+							else
+								num_2++;
+						}
 					}
 				}
 				else
 				{
-					if(1 == point_index)
+					if(point_index == 1)
 					{
-						if(cal_check_flag == 1 && (second_point_pressed == FALSE))
+						if(cal_check_flag == 1 && (point[1].pressed == FALSE))
 						{
 							if(((abs(ts->touch_x - point_1_x_first_down) > 100 || abs(ts->touch_y - point_1_y_first_down) > 100) 
 								|| jiffies - resume_time > 6000))
@@ -2218,80 +2210,42 @@ static void atmel_ts_work_func(struct work_struct *work)
 							}
 							first_in_point = 0;
 						}
-						/*if index-1 released, index-2 point remains working*/
-						first_point_id = 2;
-					}
-					else
-					{
-						/*if index-2 released, index-1 point remains working*/
-						first_point_id =1;
 					}
 				}
-				/*if both two points are released, we need to reset first_point_id*/
-				if(!first_point_pressed && !second_point_pressed)
-				{
-					point_1_amplitude = 0;
-					point_1_width = 0;
-					point_2_amplitude = 0;
-					point_2_width = 0;
-					first_point_id =0;
-                        
-					input_mt_sync(ts->input_dev); // Report empty sync packet
-				}
-
-				if(first_point_pressed && second_point_pressed)
-				{
-					if(first_point_id == 1)
-					{
-						input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, point_2_amplitude);
-						input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, point_2_width);
-						input_report_abs(ts->input_dev, ABS_MT_POSITION_X, point_2_x);
-						input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, point_2_y);
-						input_report_key(ts->input_dev, BTN_TOUCH, 1);
-						input_mt_sync(ts->input_dev);
-					}
-					else if (first_point_id == 2)
-					{
-						input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, point_1_amplitude);
-						input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, point_1_width);
-						input_report_abs(ts->input_dev, ABS_MT_POSITION_X, point_1_x);
-						input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, point_1_y);
-						input_report_key(ts->input_dev, BTN_TOUCH, 1);
-						input_mt_sync(ts->input_dev);
-					}
-				}
-				else if (first_point_pressed)
-				{
-					input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, point_1_amplitude);
-					input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, point_1_width);
-					input_report_abs(ts->input_dev, ABS_MT_POSITION_X, point_1_x);
-					input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, point_1_y);
+				
+				if (point[0].pressed) {
+					input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, 0);
+					input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, point[0].amplitude);
+					input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, point[0].width);
+					input_report_abs(ts->input_dev, ABS_MT_POSITION_X, point[0].x);
+					input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, point[0].y);
 					input_report_key(ts->input_dev, BTN_TOUCH, 1);
 					input_mt_sync(ts->input_dev);
 				}
+				if (point[1].pressed) {
+					input_report_abs(ts->input_dev, ABS_MT_TRACKING_ID, 1);
+					input_report_abs(ts->input_dev, ABS_MT_TOUCH_MAJOR, point[1].amplitude);
+					input_report_abs(ts->input_dev, ABS_MT_WIDTH_MAJOR, point[1].width);
+					input_report_abs(ts->input_dev, ABS_MT_POSITION_X, point[1].x);
+					input_report_abs(ts->input_dev, ABS_MT_POSITION_Y, point[1].y);
+					input_report_key(ts->input_dev, BTN_TOUCH, 1);
+					input_mt_sync(ts->input_dev);
+				}
+				if (!point[0].pressed && !point[1].pressed) // There is at least one touch
+				{
+					point[0].amplitude = 0;
+					point[0].width = 0;
+					point[1].amplitude = 0;
+					point[1].width = 0;
+
+					input_mt_sync(ts->input_dev); // Empty sync packet
+				}
 
 				input_sync(ts->input_dev);
-				if(first_point_pressed && second_point_pressed)
+				if(point[0].pressed && point[1].pressed)
 					last_is_2points = TRUE;
 				else
 					last_is_2points = FALSE;
-			}
-			else
-			{
-				if ((1 << 5) & status)//release bit
-				{
-					//input_mt_sync(ts->input_dev); // Report empty sync packet
-				}
-				else
-				{
-					input_report_abs(ts->input_dev, ABS_X, ts->touch_x);
-					input_report_abs(ts->input_dev, ABS_Y,  ts->touch_y);
-					input_report_abs(ts->input_dev, ABS_PRESSURE, ts->touchamplitude);
-					input_report_abs(ts->input_dev, ABS_TOOL_WIDTH, ts->sizeoftouch);
-					input_report_key(ts->input_dev, BTN_TOUCH, 1);
-					input_mt_sync(ts->input_dev);
-				}         
-				input_sync(ts->input_dev);
 			}
 			/* < DTS2010082300657 zhangtao 20100819 begin */
 			/* move the key area code to here */
