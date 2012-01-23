@@ -149,7 +149,13 @@ struct vreg *vreg_gp4 = NULL;
 //modify PMEM from 23M to 36M
 #define MSM_PMEM_SF_SIZE	0x2400000
 /* DTS2011082405478 zhudengkui 20110913 end>*/
+#ifdef CONFIG_FB_MSM_TRIPLE_BUFFER
+/* 1024 x 600 x 4(bpp) x 3(pages) */
+#define MSM_FB_SIZE     0x708000
+#else
+/* 1024 x 600 x 4(bpp) x 2(pages) */
 #define MSM_FB_SIZE		0x500000
+#endif
  /*< DTS2011062504321 songxiaoming 20110625 begin */
  /*<DTS2010102803387 penghai 20101028 begin*/
  /*<DTS2010090400203 penghai 20100904 begin*/
