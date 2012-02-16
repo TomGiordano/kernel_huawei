@@ -755,7 +755,7 @@ msmsdcc_pio_irq(int irq, void *dev_id)
 		/* Map the current scatter buffer */
 		local_irq_save(flags);
 /* < DTS2010111804286  hanshirong 20101118 begin */
-#ifdef CONFIG_HUAWEI_WIFI_SDCC
+#ifndef CONFIG_HUAWEI_WIFI_SDCC
 		if ( NULL == host->pio.sg ) {
 			local_irq_restore(flags);
 			printk(KERN_ERR"host->pio.sg is NULL\n");

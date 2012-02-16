@@ -75,7 +75,7 @@
 /*< DTS2011012004226 xuhui 20110120 begin */
 //porting wifi driver for 7x30 platform
 /* < DTS2010111804286  hanshirong 20101118 begin */
-#ifdef CONFIG_HUAWEI_WIFI_SDCC
+#ifndef CONFIG_HUAWEI_WIFI_SDCC
 #include <linux/wifi_tiwlan.h>
 #include <linux/skbuff.h>
 #endif
@@ -186,7 +186,7 @@ struct vreg *vreg_gp4 = NULL;
 
 /* DTS2011101201153  hujun 20111030 end > */
 /*use pimc gpio 36 to enable the powre of SD*/
-#ifndef CONFIG_HUAWEI_KERNEL
+#ifdef CONFIG_HUAWEI_KERNEL
 #define PMIC_GPIO_SDC4_EN_N	35  /* PMIC GPIO Number 36 */
 #else
 #define PMIC_GPIO_SDC4_EN_N	17  /* PMIC GPIO Number 18 */
