@@ -913,12 +913,8 @@ int write_acquisition_config(u8 instance,int flag)
 	*(tmp + 5) = 0; //sync
 	if(0 == flag)
     {
-        /* < DTS2011062404739 cuiyu 20110624 begin */	
-        /* shut down calibration */
-    	*(tmp + 6) = 0; //0x0a//ATCHCALST
-    	*(tmp + 7) = 1; //0x0f//ATCHCALSTHR
-        /* DTS2011062404739 cuiyu 20110624 end > */
-/*<BU5D09283 luojianhong 20100506 end*/
+        *(tmp + 6) = 5; //0x0a//ATCHCALST
+        *(tmp + 7) = 40; //0x0f//ATCHCALSTHR
     }
     else 
     {
@@ -1048,10 +1044,7 @@ int write_multitouchscreen_config(u8 instance,int flag)
 /*<BU5D09839 luojianhong 20100513 begin*/
     if(0 == flag)
     {
-        /* < DTS2011062404739 cuiyu 20110624 begin */
-        /* effect atch vaule */
-    	*(tmp + 7) = 20; //0x1d; //tchthr
-        /* DTS2011062404739 cuiyu 20110624 end > */
+        *(tmp + 7) = 50; //0x1d; //tchthr
     }
     else
     {
@@ -1064,10 +1057,7 @@ int write_multitouchscreen_config(u8 instance,int flag)
 	*(tmp + 9) = 1; //orientate
 	*(tmp + 10) = 0; //mrgtimeout
 	*(tmp + 11) = 3; //movhysti
-	/* < DTS2011042106137 zhangtao 20110509 begin */
-	/*  make the point report every pix */
-	*(tmp + 12) = 1; //movhystn
-	/* DTS2011042106137 zhangtao 20110509 end > */
+	*(tmp + 12) = 3; //movhystn
 	*(tmp + 13) = 0;//0x2e; //movfilter
 	*(tmp + 14) = 2; //numtouch
 	*(tmp + 15) = 10; //mrghyst
@@ -1198,12 +1188,7 @@ int write_gripfacesuppression_config(u8 instance)
 	}
 	memset(tmp, 0, object_size);
 
-/* < DTS2010083103149 zhangtao 20100909 begin */
-	/* < DTS2011042106137 zhangtao 20110509 begin */
-	/* turn off the fripfacesuppression */
-	*(tmp + 0) = 0x00; //0x05; //ctrl
-	/* DTS2011042106137 zhangtao 20110509 end > */
-/* < DTS2010073101113 zhangtao 20100819 begin */
+	*(tmp + 0) = 0x07; //0x05; //ctrl
 	*(tmp + 1) = 0; //xlogrip
 	*(tmp + 2) = 0; //xhigrip
 	*(tmp + 3) = 0; //ylogrip
@@ -1276,9 +1261,7 @@ int write_noisesuppression_config(u8 instance)
 	*(tmp + 5) = 0xe7; //GCAFLL
 	*(tmp + 6) = 0xff; //GCAFLL
 	*(tmp + 7) = 4; //actvgcafvalid
-    /* < DTS2011062404739 cuiyu 20110624 begin */
-	*(tmp + 8) = 30; //noisethr
-    /* DTS2011062404739 cuiyu 20110624 end > */
+	*(tmp + 8) = 20; //noisethr
 	*(tmp + 9) = 0; //reserved
 	*(tmp + 10) = 0; //freqhopscale
 	*(tmp + 11) = 4; //freq burst0
