@@ -856,7 +856,7 @@ asmlinkage int vprintk(const char *fmt, va_list args)
 #ifndef CONFIG_HUAWEI_KERNEL
 				tlen = sprintf(tbuf, "[%5lu.%06lu] ",
 #else
-				tlen = sprintf(tbuf, "[%d, %s] [%5lu.%06lu] ", current->pid, current->comm,
+				tlen = sprintf(tbuf, "[%4d, %16s] [%5lu.%06lu] ", current->pid, current->comm,
 #endif
 				/*BU5D06612 qinwei 20100330 end >*/
                 /* DTS2010071902568 hufeng 20100719 end> */
