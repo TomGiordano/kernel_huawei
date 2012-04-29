@@ -98,11 +98,6 @@ enum danymic_gamma_mode {
     LOW_LIGHT,
  };
 #endif
-/* DTS2011072500979 jiaoshuangwei 20110725 end >*/
-enum {
-	NOTIFY_UPDATE_START,
-	NOTIFY_UPDATE_STOP,
-};
 
 enum {
 	MDP_RGB_565,      /* RGB 565 planer */
@@ -304,21 +299,6 @@ struct mdp_overlay {
 	uint32_t id;
 	uint32_t user_data[8];
 	struct dpp_ctrl dpp;
-};
-
-struct msmfb_overlay_3d {
-	uint32_t is_3d;
-	uint32_t width;
-	uint32_t height;
-};
-
-
-struct msmfb_overlay_blt {
-	uint32_t enable;
-	uint32_t offset;
-	uint32_t width;
-	uint32_t height;
-	uint32_t bpp;
 };
 
 struct msmfb_overlay_3d {
