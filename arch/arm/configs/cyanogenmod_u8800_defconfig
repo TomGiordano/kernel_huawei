@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
 # Linux kernel version: 2.6.35.7
-# Mon Jan 30 20:58:33 2012
+# Sun Apr 29 17:54:03 2012
 #
 CONFIG_ARM=y
 CONFIG_SYS_SUPPORTS_APM_EMULATION=y
@@ -1017,7 +1017,7 @@ CONFIG_MTD_CFI_I1=y
 CONFIG_MTD_CFI_I2=y
 # CONFIG_MTD_CFI_I4 is not set
 # CONFIG_MTD_CFI_I8 is not set
-# CONFIG_MTD_RAM is not set
+CONFIG_MTD_RAM=y
 # CONFIG_MTD_ROM is not set
 # CONFIG_MTD_ABSENT is not set
 
@@ -1094,7 +1094,7 @@ CONFIG_UID_STAT=y
 # CONFIG_WL127X_RFKILL is not set
 CONFIG_APANIC=y
 CONFIG_APANIC_PLABEL="MTD-Crash"
-# CONFIG_HUAWEI_APANIC_EXTEND is not set
+CONFIG_HUAWEI_APANIC_EXTEND=y
 # CONFIG_TSIF is not set
 # CONFIG_HAPTIC_ISA1200 is not set
 CONFIG_PMIC8058_PWM=y
