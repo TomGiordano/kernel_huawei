@@ -40,12 +40,9 @@
 		_IOW(MSM_ROTATOR_IOCTL_MAGIC, 2, struct msm_rotator_data_info)
 #define MSM_ROTATOR_IOCTL_FINISH   \
 		_IOW(MSM_ROTATOR_IOCTL_MAGIC, 3, int)
-/*<DTS2010091402866 penghai 20100920 begin*/
-#ifdef CONFIG_HUAWEI_KERNEL
-#define MSM_ROTATOR_IOCTL_MIRROR_FLIP  \
-	      _IOW(MSM_ROTATOR_IOCTL_MAGIC, 4, int)
-#endif
-/*DTS2010091402866 penghai 20100920 end>*/
+
+#define ROTATOR_VERSION_01	0xA5B4C301
+
 enum rotator_clk_type {
 	ROTATOR_AXI_CLK,
 	ROTATOR_PCLK,
@@ -68,6 +65,9 @@ struct msm_rotator_data_info {
 	int session_id;
 	struct msmfb_data src;
 	struct msmfb_data dst;
+	unsigned int version_key;
+	struct msmfb_data src_chroma;
+	struct msmfb_data dst_chroma;
 };
 
 struct msm_rot_clocks {
